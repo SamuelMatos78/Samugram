@@ -1,9 +1,8 @@
 import tkinter as tk
-from tkinter import Toplevel, Canvas, Scrollbar
+from tkinter import Toplevel, Canvas, Scrollbar,filedialog, messagebox
 from PIL import Image, ImageTk
-import conexaodb as conn
 
-def criar_post(container, nome_usuario, conteudo_post, imagem_post_path, curtidas_iniciais, comentarios):
+def criar_post(container, foto_perfil, nome_usuario, conteudo_post, imagem_post_path, curtidas_iniciais, comentarios):
     bg_post = "#2c2f33"
     fg_nome = "#ffffff"
     fg_texto = "#cccccc"
@@ -13,8 +12,6 @@ def criar_post(container, nome_usuario, conteudo_post, imagem_post_path, curtida
     frame_post = tk.Frame(container, bg=bg_post, bd=1, relief="solid", padx=10, pady=10)
     frame_post.pack(pady=10, fill='x')  # Preencher horizontalmente
 
-    foto_perfil = conn.buscar_foto_perfil(nome_usuario)
-    
     img = Image.open(foto_perfil).resize((50, 50))
     foto = ImageTk.PhotoImage(img)
     img_label = tk.Label(frame_post, image=foto, bg=bg_post)
@@ -197,5 +194,73 @@ for nome, status in amigos:
 
     nome_label = tk.Label(frame, text=f" {nome} — {status}", font=("Helvetica", 10), fg="#bbbbbb", bg="#2c2f33")
     nome_label.pack(side="left")
+
+
+
+def abrir_janela_post():
+    janela_post = Toplevel(janela)
+    janela_post.title("Criar Novo Post")
+    janela_post.configure(bg="#23272a")
+    janela_post.geometry("400x400")
+
+    tk.Label(janela_post, text="Criar Post", font=("Helvetica", 14, "bold"),
+             bg="#7289da", fg="white", height=2).pack(fill="x")
+
+    frame_conteudo = tk.Frame(janela_post, bg="#23272a", padx=15, pady=15)
+    frame_conteudo.pack(fill="both", expand=True)
+
+    tk.Label(frame_conteudo, text="Nome de usuário:", bg="#23272a", fg="white").pack(anchor="w")
+    entrada_usuario = tk.Entry(frame_conteudo, bg="#2c2f33", fg="white", insertbackground="white")
+    entrada_usuario.pack(fill="x", pady=5)
+
+    tk.Label(frame_conteudo, text="Texto do post:", bg="#23272a", fg="white").pack(anchor="w")
+    entrada_texto = tk.Text(frame_conteudo, height=4, bg="#2c2f33", fg="white", insertbackground="white")
+    entrada_texto.pack(fill="x", pady=5)
+
+    imagem_post_path = tk.StringVar()
+    foto_perfil_path = tk.StringVar()
+
+    def escolher_imagem():
+        caminho = filedialog.askopenfilename(filetypes=[("Imagens", "*.jpg *.png *.jpeg")])
+        if caminho:
+            imagem_post_path.set(caminho)
+
+    def escolher_foto_perfil():
+        caminho = filedialog.askopenfilename(filetypes=[("Imagens", "*.jpg *.png *.jpeg")])
+        if caminho:
+            foto_perfil_path.set(caminho)
+
+    tk.Button(frame_conteudo, text="Selecionar Imagem do Post", command=escolher_imagem,
+              bg="#7289da", fg="white", bd=0, padx=10, pady=6).pack(pady=(10, 5))
+
+    tk.Button(frame_conteudo, text="Selecionar Foto de Perfil", command=escolher_foto_perfil,
+              bg="#7289da", fg="white", bd=0, padx=10, pady=6).pack(pady=5)
+
+    def postar():
+        usuario = entrada_usuario.get().strip()
+        texto = entrada_texto.get("1.0", "end").strip()
+        foto_perfil = foto_perfil_path.get() or "foto1.jpg"
+        imagem_post = imagem_post_path.get()
+
+        if not usuario or not texto:
+            messagebox.showwarning("Atenção", "Preencha o nome e o conteúdo do post.")
+            return
+
+        criar_post(scrollable_frame, foto_perfil, usuario, texto, imagem_post, 0, 0)
+        janela_post.destroy()
+
+    tk.Button(frame_conteudo, text="Postar", command=postar,
+              bg="#43b581", fg="white", font=("Helvetica", 10, "bold"), bd=0, padx=12, pady=8).pack(pady=15)
+
+# Adicionar botão de novo post na barra do topo
+botao_postar = tk.Button(header, text="Novo Post", command=abrir_janela_post,
+                        bg="#2c2f33", fg="#43b581", font=("Helvetica", 10, "bold"), bd=0, padx=12, pady=6,
+                        activebackground="#1f2124", activeforeground="#99aab5")
+botao_postar.pack(side="right", padx=(0, 10), pady=10)
+# Criar posts
+criar_post(scrollable_frame, "foto1.jpg", "ana_maria", "Hoje foi um dia incrível!", "paisagem.jpg", 120, 45)
+criar_post(scrollable_frame, "foto2.jpg", "joao_tech", "Finalizei meu projeto de IA com reconhecimento facial!", "codigo.jpg", 300, 112)
+criar_post(scrollable_frame, "foto1.jpg", "ana_maria", "Amanhecer maravilhoso na praia!", "paisagem.jpg", 89, 34)
+criar_post(scrollable_frame, "foto2.jpg", "joao_tech", "Tô testando a nova API do OpenAI 😎", "", 55, 14)
 
 janela.mainloop()
